@@ -1,8 +1,6 @@
 #!/usr/bin/env dart
 
 import 'dart:io';
-import 'dart:convert';
-import 'package:asset_image_generator/asset_image_generator.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
