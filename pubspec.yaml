@@ -1,0 +1,17 @@
+name: asset_image_generator
+description: A Dart plugin to generate app_images.dart file with static constants for all asset images
+version: 1.0.0
+homepage: https://github.com/Abhilash-Puthukkudi/asset_image_generator
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  path: ^1.8.3
+  yaml: ^3.1.2
+
+dev_dependencies:
+  test: ^1.21.0
+
+executables:
+  generate_images: generate_images
