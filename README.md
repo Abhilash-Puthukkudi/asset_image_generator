@@ -10,7 +10,7 @@ A Flutter plugin that automatically generates type-safe Dart references for all 
 
 ---
 
-## 🎉 What's New in v3.1.0
+## 🎉 What's New in v3.1.1
 
 - 📂 Generates **separate Dart files** for each asset folder
 - 🔠 Class names based on folder structure (e.g., `IconsImages`, `BackgroundsImages`)

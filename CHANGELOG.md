@@ -1,5 +1,6 @@
 # 📦 Asset Image Generator – Changelog
-
+## [3.1.1] – 2025-06-06
+1. **Path issue sloved**
 ## [3.1.0] – 2025-06-06
 1. **Added Direct Access**
 ## [3.0.0] – 2025-06-06
