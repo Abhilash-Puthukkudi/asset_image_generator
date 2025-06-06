@@ -1,6 +1,4 @@
 #!/usr/bin/env dart
-
-import 'dart:io';
 import 'package:asset_image_generator/asset_image_generator.dart';
 
 
