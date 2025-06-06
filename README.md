@@ -6,7 +6,7 @@
 [![Build Status](https://github.com/Abhilash-Puthukkudi/asset_image_generator/actions/workflows/dart.yml/badge.svg)](https://github.com/Abhilash-Puthukkudi/asset_image_generator/actions)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Abhilash-Puthukkudi/asset_image_generator/pulls)
 
-A Flutter plugin that automatically generates type-safe Dart references for all your asset images — **now with folder-based class generation in `v2.0.0`**.
+A Flutter plugin that automatically generates type-safe Dart references for all your asset images — **now with folder-based class generation in `v3.1.0`**.
 
 ---
 
