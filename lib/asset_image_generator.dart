@@ -112,7 +112,8 @@ class AssetImageGenerator {
       if (entity is File) {
         final extension = path.extension(entity.path).toLowerCase();
         if (supportedExtensions.contains(extension)) {
-          final relativePath = path.relative(entity.path);
+          // Normalize path separators to forward slashes
+          final relativePath = _normalizePath(path.relative(entity.path));
           final folderName = _getFolderName(entity.path, dir.path);
           final variableName = _generateVariableName(entity.path);
           final fileNameWithExtension = _generateFileNameWithExtension(entity.path);
@@ -129,6 +130,11 @@ class AssetImageGenerator {
     }
     
     return organizedImages;
+  }
+
+  // Helper method to normalize path separators
+  String _normalizePath(String filePath) {
+    return filePath.replaceAll(Platform.pathSeparator, '/');
   }
 
   String _getFolderName(String filePath, String basePath) {
@@ -222,14 +228,14 @@ class AssetImageGenerator {
     for (final asset in assets) {
       final basename = path.basename(asset.path);
       
-      // Path-based reference
+      // Path-based reference - using raw string literals
       buffer.writeln('  /// Path: ${asset.path}');
-      buffer.writeln('  static const String ${asset.variableName} = \'${asset.path}\';');
+      buffer.writeln('  static const String ${asset.variableName} = r"${asset.path}";');
       buffer.writeln();
       
       // Filename-with-extension reference
       buffer.writeln('  /// Filename: $basename');
-      buffer.writeln('  static const String ${asset.fileNameWithExtension} = \'$basename\';');
+      buffer.writeln('  static const String ${asset.fileNameWithExtension} = r"$basename";');
       buffer.writeln();
     }
     
