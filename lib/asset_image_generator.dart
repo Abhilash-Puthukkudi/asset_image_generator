@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
-/// Main class for generating separate image files for each folder
+/// Main class for generating image asset references
 class AssetImageGenerator {
   static const List<String> supportedExtensions = [
     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'
   ];
 
-  /// Generate separate dart files for each folder from assets in pubspec.yaml
+  /// Generate Dart files with image asset references
   Future<void> generate({String? outputDir}) async {
     try {
       print('🚀 Starting asset image generation...');
@@ -37,11 +37,7 @@ class AssetImageGenerator {
       for (final assetPath in assetPaths) {
         final assets = await _scanForImagesWithFolders(assetPath);
         for (final entry in assets.entries) {
-          if (organizedAssets.containsKey(entry.key)) {
-            organizedAssets[entry.key]!.addAll(entry.value);
-          } else {
-            organizedAssets[entry.key] = entry.value;
-          }
+          organizedAssets.putIfAbsent(entry.key, () => []).addAll(entry.value);
         }
       }
 
@@ -58,7 +54,9 @@ class AssetImageGenerator {
         final folderName = entry.key;
         final assets = entry.value;
         
-        final fileName = folderName == 'root' ? 'app_images.dart' : '${_toSnakeCase(folderName)}_images.dart';
+        final fileName = folderName == 'root' 
+            ? 'app_images.dart' 
+            : '${_toSnakeCase(folderName)}_images.dart';
         final filePath = path.join(outputDirectory, fileName);
         
         await _generateImageFile(folderName, assets, filePath);
@@ -67,22 +65,13 @@ class AssetImageGenerator {
         print('✅ Generated $fileName with ${assets.length} assets');
       }
 
-      // Generate main index file that exports all image files
+      // Generate main index file
       await _generateIndexFile(organizedAssets.keys.toList(), outputDirectory);
       generatedFiles.add('images.dart');
 
-      // Calculate total assets across all folders (null-safe)
-      int totalAssets = 0;
-      for (final assetList in organizedAssets.values) {
-        totalAssets += assetList.length;
-            }
-      
-      // Alternative null-safe approaches:
-      // final totalAssets = organizedAssets.values.where((list) => list != null).fold<int>(0, (int sum, List<ImageAsset> list) => sum + list.length);
-      // final totalAssets = organizedAssets.values.whereType<List<ImageAsset>>().fold<int>(0, (int sum, List<ImageAsset> list) => sum + list.length);
       print('🎉 Generation complete!');
       print('📁 Output directory: $outputDirectory');
-      print('📊 Total: $totalAssets assets across ${organizedAssets.length} files');
+      print('📊 Total: ${organizedAssets.values.fold<int>(0, (sum, assets) => sum + assets.length)} assets');
       print('📄 Generated files: ${generatedFiles.join(', ')}');
       
     } catch (e) {
@@ -110,7 +99,9 @@ class AssetImageGenerator {
 
   Future<Map<String, List<ImageAsset>>> _scanForImagesWithFolders(String assetPath) async {
     final Map<String, List<ImageAsset>> organizedImages = {};
-    final Directory dir = Directory(assetPath.endsWith('/') ? assetPath : path.dirname(assetPath));
+    final Directory dir = Directory(assetPath.endsWith('/') 
+        ? assetPath 
+        : path.dirname(assetPath));
     
     if (!dir.existsSync()) {
       print('⚠️  Directory not found: ${dir.path}');
@@ -124,18 +115,15 @@ class AssetImageGenerator {
           final relativePath = path.relative(entity.path);
           final folderName = _getFolderName(entity.path, dir.path);
           final variableName = _generateVariableName(entity.path);
+          final fileNameWithExtension = _generateFileNameWithExtension(entity.path);
           
-          final asset = ImageAsset(
-            path: relativePath,
-            variableName: variableName,
-            imageName: _generateImageName(entity.path),
-          );
-          
-          if (organizedImages.containsKey(folderName)) {
-            organizedImages[folderName]!.add(asset);
-          } else {
-            organizedImages[folderName] = [asset];
-          }
+          organizedImages
+              .putIfAbsent(folderName, () => [])
+              .add(ImageAsset(
+                path: relativePath,
+                variableName: variableName,
+                fileNameWithExtension: fileNameWithExtension,
+              ));
         }
       }
     }
@@ -146,58 +134,33 @@ class AssetImageGenerator {
   String _getFolderName(String filePath, String basePath) {
     final relativePath = path.relative(filePath, from: basePath);
     final parts = path.split(relativePath);
-    
-    if (parts.length == 1) {
-      // File is in root of assets directory
-      return 'root';
-    }
-    
-    // Get the immediate parent folder name
-    final folderName = parts[parts.length - 2];
-    return _toPascalCase(folderName);
-  }
-
-  String _generateImageName(String filePath) {
-    // Get filename without extension for image name only
-    String fileName = path.basenameWithoutExtension(filePath);
-    
-    // Replace special characters and spaces with underscores
-    fileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-    
-    // Remove consecutive underscores
-    fileName = fileName.replaceAll(RegExp(r'_+'), '_');
-    
-    // Remove leading/trailing underscores
-    fileName = fileName.replaceAll(RegExp(r'^_+|_+$'), '');
-    
-    // Ensure it starts with a letter or underscore
-    if (fileName.isNotEmpty && RegExp(r'^[0-9]').hasMatch(fileName)) {
-      fileName = 'img_$fileName';
-    }
-    
-    // Convert to camelCase
-    return _toCamelCase(fileName);
+    return parts.length == 1 ? 'root' : _toPascalCase(parts[parts.length - 2]);
   }
 
   String _generateVariableName(String filePath) {
-    // Get filename without extension
     String fileName = path.basenameWithoutExtension(filePath);
-    
-    // Replace special characters and spaces with underscores
     fileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-    
-    // Remove consecutive underscores
     fileName = fileName.replaceAll(RegExp(r'_+'), '_');
-    
-    // Remove leading/trailing underscores
     fileName = fileName.replaceAll(RegExp(r'^_+|_+$'), '');
     
-    // Ensure it starts with a letter or underscore
     if (fileName.isNotEmpty && RegExp(r'^[0-9]').hasMatch(fileName)) {
       fileName = 'img_$fileName';
     }
     
-    // Convert to camelCase
+    return _toCamelCase(fileName);
+  }
+
+  String _generateFileNameWithExtension(String filePath) {
+    String fileName = path.basename(filePath);
+    fileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_.]'), '_');
+    fileName = fileName.replaceAll(RegExp(r'_+'), '_');
+    fileName = fileName.replaceAll(RegExp(r'^_+|_+$'), '');
+    fileName = fileName.replaceAll('.', '_');
+    
+    if (fileName.isNotEmpty && RegExp(r'^[0-9]').hasMatch(fileName)) {
+      fileName = 'img_$fileName';
+    }
+    
     return _toCamelCase(fileName);
   }
 
@@ -239,10 +202,9 @@ class AssetImageGenerator {
   Future<void> _generateImageFile(String folderName, List<ImageAsset> assets, String outputPath) async {
     final buffer = StringBuffer();
     
-    // Sort assets alphabetically
     assets.sort((a, b) => a.variableName.compareTo(b.variableName));
     
-    // File header
+    // Header
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// Generated by asset_image_generator');
     buffer.writeln('// Generated on: ${DateTime.now().toIso8601String()}');
@@ -250,28 +212,29 @@ class AssetImageGenerator {
     buffer.writeln();
     
     final className = folderName == 'root' ? 'AppImages' : '${folderName}Images';
-    final classDescription = folderName == 'root' 
-        ? 'Root level image assets' 
-        : '$folderName folder image assets';
     
-    // Generate class
-    buffer.writeln('/// $classDescription');
+    // Class definition
     buffer.writeln('class $className {');
     buffer.writeln('  $className._();');
     buffer.writeln();
     
-    // Generate static constants with full paths
+    // Generate constants
     for (final asset in assets) {
-      buffer.writeln('  /// Full path: ${asset.path}');
+      final basename = path.basename(asset.path);
+      
+      // Path-based reference
+      buffer.writeln('  /// Path: ${asset.path}');
       buffer.writeln('  static const String ${asset.variableName} = \'${asset.path}\';');
       buffer.writeln();
-      buffer.writeln('  /// Image name only: ${asset.imageName}');
-      buffer.writeln('  static const String ${asset.imageName}Name = \'${asset.imageName}\';');
+      
+      // Filename-with-extension reference
+      buffer.writeln('  /// Filename: $basename');
+      buffer.writeln('  static const String ${asset.fileNameWithExtension} = \'$basename\';');
       buffer.writeln();
     }
     
-    // Generate list of all asset paths
-    buffer.writeln('  /// List of all image asset paths in this ${folderName == 'root' ? 'root directory' : 'folder'}');
+    // All paths list
+    buffer.writeln('  /// List of all image paths in this folder');
     buffer.writeln('  static const List<String> allPaths = [');
     for (final asset in assets) {
       buffer.writeln('    ${asset.variableName},');
@@ -279,107 +242,69 @@ class AssetImageGenerator {
     buffer.writeln('  ];');
     buffer.writeln();
     
-    // Generate list of all image names
-    buffer.writeln('  /// List of all image names in this ${folderName == 'root' ? 'root directory' : 'folder'}');
-    buffer.writeln('  static const List<String> allNames = [');
+    // All filenames list
+    buffer.writeln('  /// List of all filenames in this folder');
+    buffer.writeln('  static const List<String> allFileNames = [');
     for (final asset in assets) {
-      buffer.writeln('    ${asset.imageName}Name,');
+      buffer.writeln('    ${asset.fileNameWithExtension},');
     }
     buffer.writeln('  ];');
-    buffer.writeln();
-    
-    // Generate helper method to get path by name
-    buffer.writeln('  /// Get image path by name');
-    buffer.writeln('  static String? getPathByName(String name) {');
-    buffer.writeln('    switch (name) {');
-    for (final asset in assets) {
-      buffer.writeln('      case \'${asset.imageName}\':');
-      buffer.writeln('        return ${asset.variableName};');
-    }
-    buffer.writeln('      default:');
-    buffer.writeln('        return null;');
-    buffer.writeln('    }');
-    buffer.writeln('  }');
     
     buffer.writeln('}');
     
-    // Ensure output directory exists
+    // Write file
     final outputFile = File(outputPath);
     await outputFile.parent.create(recursive: true);
-    
-    // Write the file
     await outputFile.writeAsString(buffer.toString());
   }
 
   Future<void> _generateIndexFile(List<String> folderNames, String outputDirectory) async {
     final buffer = StringBuffer();
     
-    // File header
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// Generated by asset_image_generator');
     buffer.writeln('// Generated on: ${DateTime.now().toIso8601String()}');
-    buffer.writeln('// Main export file for all image assets');
     buffer.writeln();
     
-    // Sort folder names
     final sortedFolders = folderNames.toList()..sort();
     
     // Generate exports
-    buffer.writeln('// Export all image asset classes');
     for (final folderName in sortedFolders) {
-      final fileName = folderName == 'root' ? 'app_images.dart' : '${_toSnakeCase(folderName)}_images.dart';
+      final fileName = folderName == 'root' 
+          ? 'app_images.dart' 
+          : '${_toSnakeCase(folderName)}_images.dart';
       buffer.writeln('export \'$fileName\';');
     }
     buffer.writeln();
     
-    // Generate main Images class that provides access to all folders
-    buffer.writeln('/// Main Images class providing access to all image asset categories');
+    // Main Images class
     buffer.writeln('class Images {');
     buffer.writeln('  Images._();');
     buffer.writeln();
     
     for (final folderName in sortedFolders) {
       if (folderName == 'root') {
-        buffer.writeln('  /// Access root level images');
         buffer.writeln('  static const AppImages root = AppImages._();');
       } else {
-        buffer.writeln('  /// Access ${folderName.toLowerCase()} images');
         buffer.writeln('  static const ${folderName}Images ${_toCamelCase(folderName)} = ${folderName}Images._();');
       }
-      buffer.writeln();
     }
-    
-    // Generate method to get all paths from all folders
-    buffer.writeln('  /// Get all image paths from all folders');
-    buffer.writeln('  static List<String> getAllPaths() {');
-    buffer.writeln('    return [');
-    for (final folderName in sortedFolders) {
-      if (folderName == 'root') {
-        buffer.writeln('      ...AppImages.allPaths,');
-      } else {
-        buffer.writeln('      ...${folderName}Images.allPaths,');
-      }
-    }
-    buffer.writeln('    ];');
-    buffer.writeln('  }');
     
     buffer.writeln('}');
     
-    // Write the index file
-    final indexFile = File(path.join(outputDirectory, 'images.dart'));
-    await indexFile.writeAsString(buffer.toString());
+    await File(path.join(outputDirectory, 'images.dart'))
+        .writeAsString(buffer.toString());
   }
 }
 
-/// Represents an image asset with its path, variable name, and image name
 class ImageAsset {
   final String path;
   final String variableName;
-  final String imageName;
+  final String fileNameWithExtension;
   
   ImageAsset({
     required this.path,
     required this.variableName,
-    required this.imageName,
+    required this.fileNameWithExtension,
   });
 }
