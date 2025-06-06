@@ -10,13 +10,12 @@ A Flutter plugin that automatically generates type-safe Dart references for all 
 
 ---
 
-## 🎉 What's New in v3.0.0
+## 🎉 What's New in v3.1.0
 
 - 📂 Generates **separate Dart files** for each asset folder
 - 🔠 Class names based on folder structure (e.g., `IconsImages`, `BackgroundsImages`)
 - 📛 Variables for both full paths and image names: `home` and `homeName`
-- 🔍 Dynamic lookup with `getPathByName('home')`
-- 📄 Generates a central `images.dart` file that exports all generated classes
+
 
 > ⚠️ **Breaking Changes**: If you're upgrading from `v1.x`, see [Migration Guide →](https://github.com/Abhilash-Puthukkudi/asset_image_generator/blob/main/CHANGELOG.md)
 
