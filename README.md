@@ -17,7 +17,7 @@ A Flutter plugin that automatically generates type-safe Dart references for all 
 - 📛 Variables for both full paths and image names: `home` and `homeName`
 
 
-> ⚠️ **Breaking Changes**: If you're upgrading from `v1.x`, see [Migration Guide →](https://github.com/Abhilash-Puthukkudi/asset_image_generator/blob/main/CHANGELOG.md)
+
 
 ---
 
