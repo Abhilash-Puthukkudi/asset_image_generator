@@ -74,10 +74,8 @@ class AssetImageGenerator {
       // Calculate total assets across all folders (null-safe)
       int totalAssets = 0;
       for (final assetList in organizedAssets.values) {
-        if (assetList != null) {
-          totalAssets += assetList.length;
-        }
-      }
+        totalAssets += assetList.length;
+            }
       
       // Alternative null-safe approaches:
       // final totalAssets = organizedAssets.values.where((list) => list != null).fold<int>(0, (int sum, List<ImageAsset> list) => sum + list.length);
