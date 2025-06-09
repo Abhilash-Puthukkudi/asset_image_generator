@@ -40,7 +40,7 @@ Add to your project's `pubspec.yaml` under `dev_dependencies`:
 
 ```yaml
 dev_dependencies:
-  asset_image_generator: ^2.0.0
+  asset_image_generator: ^3.1.1
 ```
 
 Then run:
